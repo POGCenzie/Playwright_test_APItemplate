@@ -41,6 +41,7 @@ async function loadSchema(schemaPath:string){
 async function generateNewSchema(responseBody:object,schemaPath:string) {
     try {
             const generatedSchema = createSchema(responseBody)
+            addDateTimeFormatsToSchema(generatedSchema)
 
             await fs.mkdir(path.dirname(schemaPath),{recursive: true})
             await fs.writeFile(schemaPath,JSON.stringify(generatedSchema,null,4))
@@ -50,3 +51,26 @@ async function generateNewSchema(responseBody:object,schemaPath:string) {
 }
 }
 
+function addDateTimeFormatsToSchema(schema: any) {
+    if (!schema || typeof schema !== 'object') return
+
+    if (schema.properties && typeof schema.properties === 'object') {
+        for (const [propertyName, propertySchema] of Object.entries(schema.properties)) {
+            if (isTimestampProperty(propertyName) && propertySchema && typeof propertySchema === 'object') {
+                const timestampSchema = propertySchema as Record<string, unknown>
+                timestampSchema.format = 'date-time'
+            }
+
+            addDateTimeFormatsToSchema(propertySchema)
+        }
+    }
+
+    if (schema.items) {
+        addDateTimeFormatsToSchema(schema.items)
+    }
+}
+
+function isTimestampProperty(propertyName: string) {
+    const normalizedPropertyName = propertyName.toLowerCase()
+    return normalizedPropertyName === 'createdat' || normalizedPropertyName === 'updatedat'
+}

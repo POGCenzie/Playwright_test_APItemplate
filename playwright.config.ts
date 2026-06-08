@@ -30,7 +30,14 @@ export default defineConfig({
     },
     {
       name:'smoke-tests',
-      testMatch: 'smoke*'
+      testMatch: 'smoke*',
+      dependencies: ['negative-tests']
     }
+    ,
+    {
+      name:'negative-tests',
+      testMatch: 'negative*',
+    }
+
   ],
 });
